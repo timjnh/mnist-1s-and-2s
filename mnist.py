@@ -8,6 +8,7 @@ from typing import List
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.losses import BinaryCrossentropy
+from tensorflow.keras.optimizers import Adam
 
 class Label(IntEnum):
   ONE = 0
@@ -46,16 +47,19 @@ print(f"Loaded {len(X_train)} training examples")
 
 model = Sequential([
   Dense(units=28*28, activation='relu'),
-  Dense(units=50, activation='relu'),
+  Dense(units=25, activation='relu'),
   Dense(units=1, activation='sigmoid')
 ])
 
-model.compile(loss=BinaryCrossentropy())
+model.compile(
+  loss=BinaryCrossentropy(),
+  optimizer=Adam(learning_rate=1e-4)
+)
 
 model.fit(
   numpy.array(X_train, dtype=numpy.uint8),
   numpy.array(Y_train, dtype=numpy.uint8),
-  epochs=15
+  epochs=100
 )
 
 duckdb.sql("CREATE VIEW test AS (SELECT * FROM read_parquet('data/test-00000-of-00001.parquet'))")
