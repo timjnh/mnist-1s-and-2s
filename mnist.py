@@ -5,6 +5,7 @@ from PIL import Image
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import List
+import tensorflow
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.losses import BinaryCrossentropy
@@ -21,8 +22,12 @@ class Example:
 
 def get_data_for_row(image, label) -> Example:
   image = Image.open(io.BytesIO(image["bytes"]))
+
+  threshold = 100
+  bw_img = image.point(lambda x: 0 if x < threshold else 255, '1')
+
   return Example(
-    [pixel for pixel in image.getdata()],
+    [pixel for pixel in bw_img.getdata()],
     Label.ONE if label == 1 else Label.TWO
   )
 
@@ -61,6 +66,10 @@ model.fit(
   numpy.array(Y_train, dtype=numpy.uint8),
   epochs=100
 )
+
+model.save("model.keras")
+
+model = tensorflow.keras.models.load_model("model.keras")
 
 duckdb.sql("CREATE VIEW test AS (SELECT * FROM read_parquet('data/test-00000-of-00001.parquet'))")
 query = duckdb.sql("SELECT image, label FROM test WHERE label = '1' OR label = '2'")
